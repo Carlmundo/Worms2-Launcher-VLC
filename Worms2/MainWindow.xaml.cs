@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
@@ -27,17 +28,41 @@ namespace Worms2
             }
             else
             {
+                InitializeComponent();
+                if (
+                    //Windows XP
+                    System.Environment.OSVersion.Platform.ToString() == "Win32NT" &
+                    System.Environment.OSVersion.Version.Major.ToString() == "5" &
+                    System.Environment.OSVersion.Version.Minor.ToString() == "1"
+                    )
+                {
+                    string verWMP = Registry.GetValue("HKEY_LOCAL_MACHINE\\Software\\Microsoft\\MediaPlayer\\PlayerUpgrade", "PlayerVersion", "0").ToString();
+                    int indexWMP = verWMP.IndexOf(",");
+                    if (indexWMP >= 0)
+                    {
+                        verWMP = verWMP.Substring(0, indexWMP);
+                    }
+                    int.TryParse(verWMP, out int verWMPint);
+                    if (verWMPint < 11)
+                    {
+                        MessageBox.Show("Please install Windows Media Player 11 to be able to play the intro videos.");
+                        Close();
+                    }
+                }              
                 string fileIntro = "Intro.wmv";
                 if (!File.Exists(fileIntro))
                 {
                     MessageBox.Show(msgFileNotFound + fileIntro);
                     Close();
                 }
-
-                InitializeComponent();
-                VideoPlayer.MediaEnded += OnMediaEnded;
-                VideoPlayer.Play();
-                this.PreviewKeyDown += new KeyEventHandler(HandleEsc);
+                else
+                {
+                    VideoPlayer.MediaEnded += OnMediaEnded;
+                    VideoPlayer.MediaFailed += OnMediaEnded;
+                    VideoPlayer.Source = new Uri(fileIntro, UriKind.Relative);
+                    VideoPlayer.Play();
+                    this.PreviewKeyDown += new KeyEventHandler(HandleEsc);
+                }
             }
         }
         private void SingleInstance()
@@ -72,16 +97,18 @@ namespace Worms2
                 var randomVideoFile = videoList[randomVideoIndex] + ".wmv";
                 if (!File.Exists(randomVideoFile))
                 {
-                    MessageBox.Show("File not found: "+ randomVideoFile);
+                    MessageBox.Show("File not found: " + randomVideoFile);
                     Close();
                 }
-                VideoPlayer.Source = new Uri(videoList[randomVideoIndex]+".wmv", UriKind.Relative);
+                else
+                {
+                    VideoPlayer.Source = new Uri(videoList[randomVideoIndex] + ".wmv", UriKind.Relative);
+                }
             }
             else
             {
                 Close();
-            }
-            
+            }     
         }
         private void Main_Closing(object sender, CancelEventArgs e)
         {

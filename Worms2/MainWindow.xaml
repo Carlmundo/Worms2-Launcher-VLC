@@ -8,6 +8,6 @@
         Title="Worms2" WindowState="Maximized" WindowStyle="None"
         Closing="Main_Closing">
     <Grid Background="Black">
-        <MediaElement Name="VideoPlayer" Source="Intro.wmv" LoadedBehavior="Manual"/>
+        <MediaElement Name="VideoPlayer" LoadedBehavior="Manual"/>
     </Grid>
 </Window>
