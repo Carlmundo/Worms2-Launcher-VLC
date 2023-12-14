@@ -12,6 +12,7 @@ namespace Worms2
     public partial class MainWindow : Window
     {
         private const string UniqueEventName = "Worms 2 Launcher by Carlmundo";
+        string fileExtension = ".mp4";
         string msgFileNotFound = "File not found: ";
         int forceClose = 0;
 
@@ -49,7 +50,7 @@ namespace Worms2
                         Close();
                     }
                 }              
-                string fileIntro = "Intro.wmv";
+                string fileIntro = "Intro" + fileExtension;
                 if (!File.Exists(fileIntro))
                 {
                     MessageBox.Show(msgFileNotFound + fileIntro);
@@ -89,12 +90,12 @@ namespace Worms2
         private void OnMediaEnded(object sender, RoutedEventArgs e)
         {
             var currentVideo = VideoPlayer.Source.ToString();
-            if (currentVideo == "Intro.wmv")
+            if (currentVideo == "Intro" + fileExtension)
             {
                 string[] videoList = { "ARMAG", "BANDIT", "BASEBALL", "GRENADE1", "PINGPONG", "TV", "VIDCAM" };
                 Random random = new Random();
                 var randomVideoIndex = random.Next(0, videoList.Length);
-                var randomVideoFile = videoList[randomVideoIndex] + ".wmv";
+                var randomVideoFile = videoList[randomVideoIndex] + fileExtension;
                 if (!File.Exists(randomVideoFile))
                 {
                     MessageBox.Show("File not found: " + randomVideoFile);
@@ -102,7 +103,7 @@ namespace Worms2
                 }
                 else
                 {
-                    VideoPlayer.Source = new Uri(videoList[randomVideoIndex] + ".wmv", UriKind.Relative);
+                    VideoPlayer.Source = new Uri(videoList[randomVideoIndex] + fileExtension, UriKind.Relative);
                 }
             }
             else
