@@ -12,7 +12,7 @@ namespace Worms2
     public partial class MainWindow : Window
     {
         private const string UniqueEventName = "Worms 2 Launcher by Carlmundo";
-        string fileExtension = ".mp4";
+        string fileExtension = ".wmv";
         string msgFileNotFound = "File not found: ";
         int forceClose = 0;
 
@@ -49,7 +49,16 @@ namespace Worms2
                         MessageBox.Show("Please install Windows Media Player 11 to be able to play the intro videos.");
                         Close();
                     }
-                }              
+                }
+                if (File.Exists("video.ini"))
+                {
+                    string iniContents = File.ReadAllText("video.ini").Trim();
+                    if (iniContents.Length == 3 || iniContents.Length == 4)
+                    {
+                        fileExtension = "." + iniContents;
+                    }
+                }
+
                 string fileIntro = "Intro" + fileExtension;
                 if (!File.Exists(fileIntro))
                 {
