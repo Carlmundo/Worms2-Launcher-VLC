@@ -4,10 +4,11 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Worms2"
+        xmlns:uc="clr-namespace:LibVLCSharp.WPF;assembly=LibVLCSharp.WPF"
         mc:Ignorable="d"
         Title="Worms2" WindowState="Maximized" WindowStyle="None"
         Closing="Main_Closing">
     <Grid Background="Black">
-        <MediaElement Name="VideoPlayer" LoadedBehavior="Manual"/>
+        <uc:VideoView x:Name="videoView"></uc:VideoView>
     </Grid>
 </Window>

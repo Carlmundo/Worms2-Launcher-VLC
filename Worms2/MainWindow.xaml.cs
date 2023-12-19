@@ -1,8 +1,10 @@
-﻿using Microsoft.Win32;
+﻿using LibVLCSharp.Shared;
+using LibVLCSharp.WPF;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Windows;
 using System.Windows.Input;
@@ -12,10 +14,18 @@ namespace Worms2
     public partial class MainWindow : Window
     {
         private const string UniqueEventName = "Worms 2 Launcher by Carlmundo";
-        string fileExtension = ".wmv";
+        public static string fileExtension = ".mp4";
         string msgFileNotFound = "File not found: ";
         int forceClose = 0;
+        int videosPlayed = 0;
+        int mediaLoaded = 0;
+        string fileIntro = "Intro" + fileExtension;
 
+        public static Assembly currentAssembly = Assembly.GetEntryAssembly();
+        public static string currentDirectory = new FileInfo(currentAssembly.Location).DirectoryName;
+
+        LibVLC _libVLC;
+        MediaPlayer _mediaPlayer;
         public MainWindow()
         {
             SingleInstance();
@@ -29,37 +39,7 @@ namespace Worms2
             }
             else
             {
-                InitializeComponent();
-                if (
-                    //Windows XP
-                    System.Environment.OSVersion.Platform.ToString() == "Win32NT" &
-                    System.Environment.OSVersion.Version.Major.ToString() == "5" &
-                    System.Environment.OSVersion.Version.Minor.ToString() == "1"
-                    )
-                {
-                    string verWMP = Registry.GetValue("HKEY_LOCAL_MACHINE\\Software\\Microsoft\\MediaPlayer\\PlayerUpgrade", "PlayerVersion", "0").ToString();
-                    int indexWMP = verWMP.IndexOf(",");
-                    if (indexWMP >= 0)
-                    {
-                        verWMP = verWMP.Substring(0, indexWMP);
-                    }
-                    int.TryParse(verWMP, out int verWMPint);
-                    if (verWMPint < 11)
-                    {
-                        MessageBox.Show("Please install Windows Media Player 11 to be able to play the intro videos.");
-                        Close();
-                    }
-                }
-                if (File.Exists("video.ini"))
-                {
-                    string iniContents = File.ReadAllText("video.ini").Trim();
-                    if (iniContents.Length == 3 || iniContents.Length == 4)
-                    {
-                        fileExtension = "." + iniContents;
-                    }
-                }
-
-                string fileIntro = "Intro" + fileExtension;
+                InitializeComponent();        
                 if (!File.Exists(fileIntro))
                 {
                     MessageBox.Show(msgFileNotFound + fileIntro);
@@ -67,14 +47,59 @@ namespace Worms2
                 }
                 else
                 {
-                    VideoPlayer.MediaEnded += OnMediaEnded;
-                    VideoPlayer.MediaFailed += OnMediaEnded;
-                    VideoPlayer.Source = new Uri(fileIntro, UriKind.Relative);
-                    VideoPlayer.Play();
+                    videoView.Loaded += VideoView_Loaded;
                     this.PreviewKeyDown += new KeyEventHandler(HandleEsc);
                 }
             }
         }
+
+        private void HandleEsc(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Escape)
+            {
+                OnMediaEnded(this,null);
+            }
+        }
+
+        private void VideoView_Loaded(object sender, RoutedEventArgs e)
+        {
+            Core.Initialize();
+            _libVLC = new LibVLC();
+            _mediaPlayer = new MediaPlayer(_libVLC);
+            videoView.MediaPlayer = _mediaPlayer;
+            _mediaPlayer.Play(new Media(_libVLC, new Uri("file://" + currentDirectory + "\\" + fileIntro)));
+            _mediaPlayer.EndReached += OnMediaEnded;
+            mediaLoaded = 1;
+        }
+
+        private void OnMediaEnded(object sender, EventArgs e)
+        {
+            videosPlayed++;
+            var currentAssembly = Assembly.GetEntryAssembly();
+            var currentDirectory = new FileInfo(currentAssembly.Location).DirectoryName;
+
+            if (videosPlayed == 1)
+            {
+                string[] videoList = { "ARMAG", "BANDIT", "BASEBALL", "GRENADE1", "PINGPONG", "TV", "VIDCAM" };
+                Random random = new Random();
+                var randomVideoIndex = random.Next(0, videoList.Length);
+                var randomVideoFile = videoList[randomVideoIndex] + fileExtension;
+                if (!File.Exists(randomVideoFile))
+                {
+                    MessageBox.Show("File not found: " + randomVideoFile);
+                    Close();
+                }
+                else
+                {
+                    ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Play(new Media(_libVLC, new Uri("file://" + currentDirectory + "\\" + videoList[randomVideoIndex] + fileExtension))));
+                }
+            }
+            else
+            {
+                Close();
+            }  
+        }
+
         private void SingleInstance()
         {
             try
@@ -89,39 +114,14 @@ namespace Worms2
             }
         }
 
-        private void HandleEsc(object sender, KeyEventArgs e)
-        {
-            if (e.Key == Key.Escape)
-            {
-                VideoPlayer.Position = TimeSpan.MaxValue;
-            }
-        }
-        private void OnMediaEnded(object sender, RoutedEventArgs e)
-        {
-            var currentVideo = VideoPlayer.Source.ToString();
-            if (currentVideo == "Intro" + fileExtension)
-            {
-                string[] videoList = { "ARMAG", "BANDIT", "BASEBALL", "GRENADE1", "PINGPONG", "TV", "VIDCAM" };
-                Random random = new Random();
-                var randomVideoIndex = random.Next(0, videoList.Length);
-                var randomVideoFile = videoList[randomVideoIndex] + fileExtension;
-                if (!File.Exists(randomVideoFile))
-                {
-                    MessageBox.Show("File not found: " + randomVideoFile);
-                    Close();
-                }
-                else
-                {
-                    VideoPlayer.Source = new Uri(videoList[randomVideoIndex] + fileExtension, UriKind.Relative);
-                }
-            }
-            else
-            {
-                Close();
-            }     
-        }
         private void Main_Closing(object sender, CancelEventArgs e)
         {
+            if (mediaLoaded == 1)
+            {
+                _mediaPlayer.Stop();
+                _mediaPlayer.Dispose();
+                _libVLC.Dispose();
+            }
             if (forceClose != 1)
             {
                 var appLaunch = "frontend.exe";
