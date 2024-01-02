@@ -23,9 +23,13 @@ namespace Worms2
 
         public static Assembly currentAssembly = Assembly.GetEntryAssembly();
         public static string currentDirectory = new FileInfo(currentAssembly.Location).DirectoryName;
+        public static string gameDirectory = currentDirectory + "\\..\\";
 
         LibVLC _libVLC;
         MediaPlayer _mediaPlayer;
+
+        private SynchronizationContext _uiContext = SynchronizationContext.Current;
+
         public MainWindow()
         {
             SingleInstance();
@@ -40,7 +44,7 @@ namespace Worms2
             else
             {
                 InitializeComponent();        
-                if (!File.Exists(fileIntro))
+                if (!File.Exists(gameDirectory + fileIntro))
                 {
                     MessageBox.Show(msgFileNotFound + fileIntro);
                     Close();
@@ -55,9 +59,13 @@ namespace Worms2
 
         private void HandleEsc(object sender, KeyEventArgs e)
         {
-            if (e.Key == Key.Escape)
+            switch (e.Key)
             {
-                OnMediaEnded(this,null);
+                case Key.Escape:
+                case Key.Return:
+                case Key.Space:
+                    OnMediaEnded(this, null);
+                break;
             }
         }
 
@@ -65,39 +73,39 @@ namespace Worms2
         {
             Core.Initialize();
             _libVLC = new LibVLC();
+            //_libVLC = new LibVLC("--reset-plugins-cache");
             _mediaPlayer = new MediaPlayer(_libVLC);
             videoView.MediaPlayer = _mediaPlayer;
-            _mediaPlayer.Play(new Media(_libVLC, new Uri("file://" + currentDirectory + "\\" + fileIntro)));
+            _mediaPlayer.Play(new Media(_libVLC, new Uri("file://" + gameDirectory + fileIntro)));
             _mediaPlayer.EndReached += OnMediaEnded;
             mediaLoaded = 1;
         }
 
-        private void OnMediaEnded(object sender, EventArgs e)
+        public void OnMediaEnded(object sender, EventArgs e)
         {
-            videosPlayed++;
-            var currentAssembly = Assembly.GetEntryAssembly();
-            var currentDirectory = new FileInfo(currentAssembly.Location).DirectoryName;
-
-            if (videosPlayed == 1)
-            {
-                string[] videoList = { "ARMAG", "BANDIT", "BASEBALL", "GRENADE1", "PINGPONG", "TV", "VIDCAM" };
-                Random random = new Random();
-                var randomVideoIndex = random.Next(0, videoList.Length);
-                var randomVideoFile = videoList[randomVideoIndex] + fileExtension;
-                if (!File.Exists(randomVideoFile))
+            _uiContext.Post(new SendOrPostCallback(new Action<object>(o => {
+                videosPlayed++;
+                if (videosPlayed == 1)
                 {
-                    MessageBox.Show("File not found: " + randomVideoFile);
-                    Close();
+                    string[] videoList = { "ARMAG", "BANDIT", "BASEBALL", "GRENADE1", "PINGPONG", "TV", "VIDCAM" };
+                    Random random = new Random();
+                    var randomVideoIndex = random.Next(0, videoList.Length);
+                    var randomVideoFile = videoList[randomVideoIndex] + fileExtension;
+                    if (!File.Exists(gameDirectory + randomVideoFile))
+                        {
+                        MessageBox.Show("File not found: " + randomVideoFile);
+                        Close();
+                    }
+                    else
+                    {
+                        ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Play(new Media(_libVLC, new Uri("file://" + gameDirectory + videoList[randomVideoIndex] + fileExtension))));
+                    }
                 }
                 else
                 {
-                    ThreadPool.QueueUserWorkItem(_ => _mediaPlayer.Play(new Media(_libVLC, new Uri("file://" + currentDirectory + "\\" + videoList[randomVideoIndex] + fileExtension))));
+                    Close();
                 }
-            }
-            else
-            {
-                Close();
-            }  
+            })), null);
         }
 
         private void SingleInstance()
@@ -124,15 +132,16 @@ namespace Worms2
             }
             if (forceClose != 1)
             {
-                var appLaunch = "frontend.exe";
+                var appLaunch = gameDirectory + "frontend.exe";
                 if (File.Exists(appLaunch))
-                {
-                    var processInfo = new ProcessStartInfo("frontend.exe");
+                    {
+                    var processInfo = new ProcessStartInfo(appLaunch);
+                    processInfo.WorkingDirectory = gameDirectory;
                     Process.Start(processInfo);
                 }
                 else
                 {
-                    MessageBox.Show(msgFileNotFound + appLaunch);
+                    MessageBox.Show(msgFileNotFound + "frontend.exe");
                 }
             }
                 

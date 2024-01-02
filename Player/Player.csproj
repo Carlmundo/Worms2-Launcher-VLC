@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{182C7F27-986A-4FFF-8AC9-5A49EA4277DC}</ProjectGuid>
+    <ProjectGuid>{CE66EACE-0CB3-4D10-A226-63D1CD64B310}</ProjectGuid>
     <OutputType>WinExe</OutputType>
-    <RootNamespace>Worms2</RootNamespace>
-    <AssemblyName>start</AssemblyName>
+    <RootNamespace>Player</RootNamespace>
+    <AssemblyName>intro</AssemblyName>
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -37,7 +37,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\bin\Debug\VideoPlayer\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -47,7 +47,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\bin\Release\VideoPlayer\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -124,9 +124,6 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="app.config">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -144,22 +141,24 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <VlcWindowsX86IncludeFiles Include="plugins\audio_output\libdirectsound_plugin.dll" />
     <VlcWindowsX86IncludeFiles Include="plugins\access\libfilesystem_plugin.dll" />
     <VlcWindowsX86IncludeFiles Include="plugins\audio_filter\libtrivial_channel_mixer_plugin.dll" />
     <VlcWindowsX86IncludeFiles Include="plugins\audio_filter\libugly_resampler_plugin.dll" />
+    <VlcWindowsX86IncludeFiles Include="plugins\audio_output\libdirectsound_plugin.dll" />
     <VlcWindowsX86IncludeFiles Include="plugins\audio_output\libwaveout_plugin.dll" />
-    <VlcWindowsX86IncludeFiles Include="plugins\codec\libavcodec_plugin.dll" />
-    <VlcWindowsX86IncludeFiles Include="plugins\codec\libd3d11va_plugin.dll" />
-    <VlcWindowsX86IncludeFiles Include="plugins\video_output\libdirect3d9_plugin.dll" />
-    <VlcWindowsX86IncludeFiles Include="plugins\video_output\libdirect3d11_plugin.dll" />
-    <VlcWindowsX86IncludeFiles Include="plugins\video_output\libgl_plugin.dll" />
-    <VlcWindowsX86IncludeFiles Include="plugins\video_output\libdrawable_plugin.dll" />
+    <VlcWindowsX86IncludeFiles Include="plugins\codec\%2a" />
+    <VlcWindowsX86IncludeFiles Include="plugins\video_chroma\%2a" />
+    <VlcWindowsX86IncludeFiles Include="plugins\video_output\%2a" />
     <VlcWindowsX86IncludeFiles Include="libvlc.dll" />
     <VlcWindowsX86IncludeFiles Include="libvlc.lib" />
     <VlcWindowsX86IncludeFiles Include="libvlccore.dll" />
     <VlcWindowsX86IncludeFiles Include="libvlccore.lib" />
-    <VlcWindowsX64ExcludeFiles Include="libvlc.dll" />
+    <VlcWindowsX64IncludeFiles Include="libvlc.dll" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="plugins\codec\" />
+    <Folder Include="plugins\video_chroma\" />
+    <Folder Include="plugins\video_output\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="..\packages\VideoLAN.LibVLC.Windows.3.0.20\build\VideoLAN.LibVLC.Windows.targets" Condition="Exists('..\packages\VideoLAN.LibVLC.Windows.3.0.20\build\VideoLAN.LibVLC.Windows.targets')" />
@@ -173,11 +172,5 @@
   <Target Name="EnsureBclBuildImported" BeforeTargets="BeforeBuild" Condition="'$(BclBuildImported)' == ''">
     <Error Condition="!Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=317567." HelpKeyword="BCLBUILD2001" />
     <Error Condition="Exists('..\packages\Microsoft.Bcl.Build.1.0.14\tools\Microsoft.Bcl.Build.targets')" Text="The build restored NuGet packages. Build the project again to include these packages in the build. For more information, see http://go.microsoft.com/fwlink/?LinkID=317568." HelpKeyword="BCLBUILD2002" />
-  </Target>
-  <Target Name="AfterBuild">
-    <ItemGroup>
-      <MoveToLibFolder Include="$(OutputPath)*.dll ; $(OutputPath)*.pdb ; $(OutputPath)*.xml" />
-    </ItemGroup>
-    <Move SourceFiles="@(MoveToLibFolder)" DestinationFolder="$(OutputPath)libvlc" OverwriteReadOnlyFiles="true" />
   </Target>
 </Project>
