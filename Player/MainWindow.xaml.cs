@@ -132,7 +132,8 @@ namespace Worms2
             }
             if (forceClose != 1)
             {
-                var appLaunch = gameDirectory + "frontend.exe";
+                var appName = "frontend.exe";
+                var appLaunch = gameDirectory + appName;
                 if (File.Exists(appLaunch))
                     {
                     var processInfo = new ProcessStartInfo(appLaunch);
@@ -141,7 +142,7 @@ namespace Worms2
                 }
                 else
                 {
-                    MessageBox.Show(msgFileNotFound + "frontend.exe");
+                    MessageBox.Show(msgFileNotFound + appName);
                 }
             }
                 
